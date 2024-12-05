@@ -286,7 +286,7 @@ func GetOwnerReference(app *v1beta2.SparkApplication) metav1.OwnerReference {
 }
 
 // GetDriverState returns the driver state from the given driver pod.
-func GetDriverState(pod *corev1.Pod) v1beta2.DriverState {
+func GetDriverState(pod *corev1.Pod, monitoredSidecars *string, failOnSidecarCompletion *bool) v1beta2.DriverState {
 	switch pod.Status.Phase {
 	case corev1.PodPending:
 		return v1beta2.DriverStatePending

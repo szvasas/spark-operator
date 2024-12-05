@@ -556,7 +556,7 @@ type DriverSpec struct {
 	// FailOnCheckedSidecarCompletion specifies whether the driver should fail even if a checked sidecar completes with a 0 exit code.
 	// This is useful for sidecars that don't populate exit code properly in case of a failure.
 	// +optional
-	FailOnMonitoredSidecarCompletion bool `json:"failOnCheckedSidecarCompletion,omitempty"`
+	FailOnMonitoredSidecarCompletion *bool `json:"failOnCheckedSidecarCompletion,omitempty"`
 }
 
 // ExecutorSpec is specification of the executor.
