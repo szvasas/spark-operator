@@ -880,3 +880,27 @@ var _ = Describe("GetDriverState", func() {
 
 	})
 })
+
+var _ = Describe("GetDriverState2", func(){
+	Context("The driver pod has no sidecar container", func() {
+		paramFalse := false
+		paramTrue := true
+		paramEmpty := ""
+		DescribeTable("Should return the correct driver state when the container is not terminated",
+			func(podPhase corev1.PodPhase, monitoredSidecars *string, failOnMonitoredSidecarZeroExitCode *bool, expectedDriverState v1beta2.DriverState) {
+				pod := &corev1.Pod{
+					Status: corev1.PodStatus{
+						Phase: podPhase,
+					},
+				}
+				Expect(util.GetDriverState(pod, monitoredSidecars, failOnMonitoredSidecarZeroExitCode)).To(Equal(expectedDriverState))
+			},
+			Entry("PodPending monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, nil, nil, v1beta2.DriverStatePending),
+			Entry("PodPending monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, nil, &paramFalse, v1beta2.DriverStatePending),
+			Entry("PodPending monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, nil, &paramTrue, v1beta2.DriverStatePending),
+			Entry("PodPending monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, &paramEmpty, nil, v1beta2.DriverStatePending),
+			Entry("PodPending monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
+			Entry("PodPending monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
+		)
+	})
+})
