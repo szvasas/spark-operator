@@ -298,6 +298,10 @@ func GetDriverState(pod *corev1.Pod, monitoredSidecars *string, failOnSidecarCom
 			}
 			return v1beta2.DriverStateFailed
 		}
+		sidecarState := GetFirstMonitoredSidecarTerminatedState(monitoredSidecars, pod)
+		if sidecarState != nil {
+			return v1beta2.DriverStateFailed
+		}
 		return v1beta2.DriverStateRunning
 	case corev1.PodSucceeded:
 		return v1beta2.DriverStateCompleted
@@ -331,6 +335,19 @@ func GetExecutorState(pod *corev1.Pod) v1beta2.ExecutorState {
 // GetDriverContainerTerminatedState returns the terminated state of the driver container.
 func GetDriverContainerTerminatedState(pod *corev1.Pod) *corev1.ContainerStateTerminated {
 	return GetContainerTerminatedState(pod, common.SparkDriverContainerName)
+}
+
+func GetFirstMonitoredSidecarTerminatedState(monitoredSidecars *string, pod *corev1.Pod) *corev1.ContainerStateTerminated {
+	if monitoredSidecars != nil && *monitoredSidecars != "" {
+		sidecars := strings.Split(*monitoredSidecars, ",")
+		for _, sidecar := range sidecars {
+			state := GetContainerTerminatedState(pod, sidecar)
+			if state != nil {
+				return state
+			}
+		}
+	}
+	return nil
 }
 
 // GetExecutorContainerTerminatedState returns the terminated state of the executor container.

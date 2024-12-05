@@ -445,6 +445,44 @@ var _ = Describe("GetDriverState", func() {
 				Expect(util.GetDriverState(pod, nil, nil)).To(Equal(v1beta2.DriverStateFailed))
 			})
 
+			It("Should return the correct driver state when the pod is running and a sidecar container completed successfully", func() {
+				pod := &corev1.Pod{
+					Status: corev1.PodStatus{
+						Phase: corev1.PodRunning,
+						ContainerStatuses: []corev1.ContainerStatus{
+							{
+								Name: "sidecar",
+								State: corev1.ContainerState{
+									Terminated: &corev1.ContainerStateTerminated{
+										ExitCode: 0,
+									},
+								},
+							},
+						},
+					},
+				}
+				Expect(util.GetDriverState(pod, nil, nil)).To(Equal(v1beta2.DriverStateRunning))
+			})
+
+			It("Should return the correct driver state when the pod is running and a sidecar container failed", func() {
+				pod := &corev1.Pod{
+					Status: corev1.PodStatus{
+						Phase: corev1.PodRunning,
+						ContainerStatuses: []corev1.ContainerStatus{
+							{
+								Name: "sidecar",
+								State: corev1.ContainerState{
+									Terminated: &corev1.ContainerStateTerminated{
+										ExitCode: 1,
+									},
+								},
+							},
+						},
+					},
+				}
+				Expect(util.GetDriverState(pod, nil, nil)).To(Equal(v1beta2.DriverStateRunning))
+			})
+
 			It("Should return the correct driver state when the pod is failed but the Spark container completed successfully", func() {
 				pod := &corev1.Pod{
 					Status: corev1.PodStatus{
@@ -499,5 +537,155 @@ var _ = Describe("GetDriverState", func() {
 				Expect(util.GetDriverState(pod, nil, nil)).To(Equal(v1beta2.DriverStateFailed))
 			})
 		})
+	})
+
+	Context("With a single element MonitoredSidecars configured", func() {
+		monitoredSidecar := "monitored-sidecar"
+		It("Should return the correct driver state when the pod is failed due to a non-monitored sidecar but the Spark container completed successfully", func() {
+			pod := &corev1.Pod{
+				Status: corev1.PodStatus{
+					Phase: corev1.PodFailed,
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name: common.SparkDriverContainerName,
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 0,
+								},
+							},
+						},
+						{
+							Name: "non-monitored-sidecar",
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 1,
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(util.GetDriverState(pod, &monitoredSidecar, nil)).To(Equal(v1beta2.DriverStateCompleted))
+		})
+
+		It("Should return the correct driver state when the pod is failed due to a monitored sidecar but the Spark container completed successfully", func() {
+			pod := &corev1.Pod{
+				Status: corev1.PodStatus{
+					Phase: corev1.PodFailed,
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name: common.SparkDriverContainerName,
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 0,
+								},
+							},
+						},
+						{
+							Name: monitoredSidecar,
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 1,
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(util.GetDriverState(pod, &monitoredSidecar, nil)).To(Equal(v1beta2.DriverStateCompleted))
+		})
+
+		It("Should return the correct driver state when the pod is failed due to a Spark container failure and there is a successful non-monitored sidecar", func() {
+			pod := &corev1.Pod{
+				Status: corev1.PodStatus{
+					Phase: corev1.PodFailed,
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name: common.SparkDriverContainerName,
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 1,
+								},
+							},
+						},
+						{
+							Name: "non-monitored-sidecar",
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 0,
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(util.GetDriverState(pod, &monitoredSidecar, nil)).To(Equal(v1beta2.DriverStateFailed))
+		})
+
+		It("Should return the correct driver state when the pod is failed due to a Spark container failure and there is a successful monitored sidecar", func() {
+			pod := &corev1.Pod{
+				Status: corev1.PodStatus{
+					Phase: corev1.PodFailed,
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name: common.SparkDriverContainerName,
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 1,
+								},
+							},
+						},
+						{
+							Name: monitoredSidecar,
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 0,
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(util.GetDriverState(pod, &monitoredSidecar, nil)).To(Equal(v1beta2.DriverStateFailed))
+		})
+
+		It("Should return the correct driver state when the pod is running and a non-monitored sidecar container completed successfully", func() {
+			pod := &corev1.Pod{
+				Status: corev1.PodStatus{
+					Phase: corev1.PodRunning,
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name: "non-monitored-sidecar",
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 0,
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(util.GetDriverState(pod, &monitoredSidecar, nil)).To(Equal(v1beta2.DriverStateRunning))
+		})
+
+		It("Should return the correct driver state when the pod is running and a monitored sidecar container failed", func() {
+			pod := &corev1.Pod{
+				Status: corev1.PodStatus{
+					Phase: corev1.PodRunning,
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name: monitoredSidecar,
+							State: corev1.ContainerState{
+								Terminated: &corev1.ContainerStateTerminated{
+									ExitCode: 1,
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(util.GetDriverState(pod, &monitoredSidecar, nil)).To(Equal(v1beta2.DriverStateFailed))
+		})
+
 	})
 })
