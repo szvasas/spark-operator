@@ -785,7 +785,7 @@ func (r *Reconciler) updateDriverState(_ context.Context, app *v1beta2.SparkAppl
 	}
 
 	app.Status.SparkApplicationID = util.GetSparkApplicationID(driverPod)
-	driverState := util.GetDriverState(driverPod, app.Spec.Driver.MonitoredSidecars, app.Spec.Driver.FailOnMonitoredSidecarCompletion)
+	driverState := util.GetDriverState(driverPod, app.Spec.Driver.MonitoredSidecars, app.Spec.Driver.FailOnMonitoredSidecarZeroExitCode)
 	if util.IsDriverTerminated(driverState) {
 		if app.Status.TerminationTime.IsZero() {
 			app.Status.TerminationTime = metav1.Now()

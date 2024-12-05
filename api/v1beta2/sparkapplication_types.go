@@ -553,10 +553,10 @@ type DriverSpec struct {
 	// If any of these containers fail, the driver will be considered failed.
 	// +optional
 	MonitoredSidecars *string `json:"monitoredSidecars,omitempty"`
-	// FailOnCheckedSidecarCompletion specifies whether the driver should fail even if a checked sidecar completes with a 0 exit code.
+	// FailOnMonitoredSidecarZeroExitCode specifies whether the driver should fail even if a checked sidecar completes with a 0 exit code.
 	// This is useful for sidecars that don't populate exit code properly in case of a failure.
 	// +optional
-	FailOnMonitoredSidecarCompletion *bool `json:"failOnCheckedSidecarCompletion,omitempty"`
+	FailOnMonitoredSidecarZeroExitCode *bool `json:"failOnMonitoredSidecarZeroExitCode,omitempty"`
 }
 
 // ExecutorSpec is specification of the executor.
