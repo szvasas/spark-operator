@@ -549,6 +549,14 @@ type DriverSpec struct {
 	// PriorityClassName is the name of the PriorityClass for the driver pod.
 	// +optional
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
+	// MonitoredSidecars is a list of sidecar containers in the driver pod that should be monitored for driver health.
+	// If any of these containers fail, the driver will be considered failed.
+	// +optional
+	MonitoredSidecars *string `json:"monitoredSidecars,omitempty"`
+	// FailOnCheckedSidecarCompletion specifies whether the driver should fail even if a checked sidecar completes with a 0 exit code.
+	// This is useful for sidecars that don't populate exit code properly in case of a failure.
+	// +optional
+	FailOnMonitoredSidecarCompletion bool `json:"failOnCheckedSidecarCompletion,omitempty"`
 }
 
 // ExecutorSpec is specification of the executor.
