@@ -1045,26 +1045,50 @@ var _ = Describe("GetDriverState2", func(){
 			},
 		},
 	}
+	test := func(podPhase corev1.PodPhase, containerStatuses []corev1.ContainerStatus, monitoredSidecars *string, failOnMonitoredSidecarZeroExitCode *bool, expectedDriverState v1beta2.DriverState) {
+		pod := &corev1.Pod{
+			Status: corev1.PodStatus{
+				Phase: podPhase,
+				ContainerStatuses: containerStatuses,
+			},
+		}
+		Expect(util.GetDriverState(pod, monitoredSidecars, failOnMonitoredSidecarZeroExitCode)).To(Equal(expectedDriverState))
+	}
 
-	Context("Getting driver state for PodPending", func() {
+	Context("Driver state for PodPending", func() {
 		for _, containerStatusInputParam := range containerStatusInputParams {
 			for _, monitoredSidecarsInputParam := range monitoredSidecarsInputParams {
 				for _, failOnMonitoredSidecarZeroExitCodeInputParam := range failOnMonitoredSidecarZeroExitCodeInputParams {
 					It(fmt.Sprintf("%s %s %s", containerStatusInputParam.name, monitoredSidecarsInputParam.name, failOnMonitoredSidecarZeroExitCodeInputParam.name), func() {
-						test := func(podPhase corev1.PodPhase, containerStatuses []corev1.ContainerStatus, monitoredSidecars *string, failOnMonitoredSidecarZeroExitCode *bool, expectedDriverState v1beta2.DriverState) {
-							pod := &corev1.Pod{
-								Status: corev1.PodStatus{
-									Phase: podPhase,
-									ContainerStatuses: containerStatuses,
-								},
-							}
-							Expect(util.GetDriverState(pod, monitoredSidecars, failOnMonitoredSidecarZeroExitCode)).To(Equal(expectedDriverState))
-						}
-
 						test(corev1.PodPending, containerStatusInputParam.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStatePending)
 					})
 				}
 			}
 		}
 	})
+
+	Context("Driver state for PodSucceeded", func() {
+		for _, containerStatusInputParam := range containerStatusInputParams {
+			for _, monitoredSidecarsInputParam := range monitoredSidecarsInputParams {
+				for _, failOnMonitoredSidecarZeroExitCodeInputParam := range failOnMonitoredSidecarZeroExitCodeInputParams {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParam.name, monitoredSidecarsInputParam.name, failOnMonitoredSidecarZeroExitCodeInputParam.name), func() {
+						test(corev1.PodSucceeded, containerStatusInputParam.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStateCompleted)
+					})
+				}
+			}
+		}
+	})
+
+	Context("Driver state for PodUnknown", func() {
+		for _, containerStatusInputParam := range containerStatusInputParams {
+			for _, monitoredSidecarsInputParam := range monitoredSidecarsInputParams {
+				for _, failOnMonitoredSidecarZeroExitCodeInputParam := range failOnMonitoredSidecarZeroExitCodeInputParams {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParam.name, monitoredSidecarsInputParam.name, failOnMonitoredSidecarZeroExitCodeInputParam.name), func() {
+						test(corev1.PodUnknown, containerStatusInputParam.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStateUnknown)
+					})
+				}
+			}
+		}
+	})
+
 })
