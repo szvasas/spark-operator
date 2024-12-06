@@ -17,6 +17,7 @@ limitations under the License.
 package util_test
 
 import (
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -882,267 +883,174 @@ var _ = Describe("GetDriverState", func() {
 })
 
 var _ = Describe("GetDriverState2", func(){
-	Context("The driver pod has no sidecar container", func() {
-		paramFalse := false
-		paramTrue := true
-		paramEmpty := ""
-		sidecarName := "sidecar"
-		differentSidecarName := "differentSidecar"
-		failOnMonitoredSidecarZeroExitCodeInputParams := []struct {
-			name	string
-			value	*bool
-		}{
-			{
-				name: "failOnMonitoredSidecarZeroExitCode=true",
-				value: &paramTrue,
-			},
-			{
-				name: "failOnMonitoredSidecarZeroExitCode=false",
-				value: &paramFalse,
-			},
-			{
-				name: "failOnMonitoredSidecarZeroExitCode=nil",
-				value: nil,
-			},
-		}
-		monitoredSidecarsInputParams := []struct {
-			name	string
-			value	*string
-		}{
-			{
-				name: "monitoredSidecars=nil",
-				value: nil,
-			},
-			{
-				name: "monitoredSidecars=''",
-				value: &paramEmpty,
-			},
-			{
-				name: "monitoredSidecars='sidecar'",
-				value: &sidecarName,
-			},
-			{
-				name: "monitoredSidecars='differentSidecar'",
-				value: &differentSidecarName,
-			},
-		}
-		containerStatusInputParams := []struct {
-			name	string
-			value	[]corev1.ContainerStatus
-		}{
-			{
-				name: "empty ContainerStatus",
-				value: []corev1.ContainerStatus{},
-			},
-			{
-				name: "driverContainerExitCodeZero ContainerStatus",
-				value: []corev1.ContainerStatus{
-					{
-						Name: common.SparkDriverContainerName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 0,
-							},
+	paramFalse := false
+	paramTrue := true
+	paramEmpty := ""
+	sidecarName := "sidecar"
+	differentSidecarName := "differentSidecar"
+	failOnMonitoredSidecarZeroExitCodeInputParams := []struct {
+		name	string
+		value	*bool
+	}{
+		{
+			name: "failOnMonitoredSidecarZeroExitCode=true",
+			value: &paramTrue,
+		},
+		{
+			name: "failOnMonitoredSidecarZeroExitCode=false",
+			value: &paramFalse,
+		},
+		{
+			name: "failOnMonitoredSidecarZeroExitCode=nil",
+			value: nil,
+		},
+	}
+	monitoredSidecarsInputParams := []struct {
+		name	string
+		value	*string
+	}{
+		{
+			name: "monitoredSidecars=nil",
+			value: nil,
+		},
+		{
+			name: "monitoredSidecars=''",
+			value: &paramEmpty,
+		},
+		{
+			name: "monitoredSidecars='sidecar'",
+			value: &sidecarName,
+		},
+		{
+			name: "monitoredSidecars='differentSidecar'",
+			value: &differentSidecarName,
+		},
+	}
+	containerStatusInputParams := []struct {
+		name	string
+		value	[]corev1.ContainerStatus
+	}{
+		{
+			name: "empty ContainerStatus",
+			value: []corev1.ContainerStatus{},
+		},
+		{
+			name: "driverContainerExitCodeZero ContainerStatus",
+			value: []corev1.ContainerStatus{
+				{
+					Name: common.SparkDriverContainerName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 0,
 						},
 					},
 				},
 			},
-			{
-				name: "driverContainerExitCodeNonZero ContainerStatus",
-				value: []corev1.ContainerStatus{
-					{
-						Name: common.SparkDriverContainerName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 1,
-							},
+		},
+		{
+			name: "driverContainerExitCodeNonZero ContainerStatus",
+			value: []corev1.ContainerStatus{
+				{
+					Name: common.SparkDriverContainerName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 1,
 						},
 					},
 				},
 			},
-			{
-				name: "driverContainerExitCodeZeroSidecarExitCodeZero ContainerStatus",
-				value: []corev1.ContainerStatus{
-					{
-						Name: common.SparkDriverContainerName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 0,
-							},
+		},
+		{
+			name: "driverContainerExitCodeZeroSidecarExitCodeZero ContainerStatus",
+			value: []corev1.ContainerStatus{
+				{
+					Name: common.SparkDriverContainerName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 0,
 						},
 					},
-					{
-						Name: sidecarName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 0,
-							},
+				},
+				{
+					Name: sidecarName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 0,
 						},
 					},
 				},
 			},
-			{
-				name: "driverContainerExitCodeZeroSidecarExitCodeNonZero ContainerStatus",
-				value: []corev1.ContainerStatus{
-					{
-						Name: common.SparkDriverContainerName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 0,
-							},
+		},
+		{
+			name: "driverContainerExitCodeZeroSidecarExitCodeNonZero ContainerStatus",
+			value: []corev1.ContainerStatus{
+				{
+					Name: common.SparkDriverContainerName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 0,
 						},
 					},
-					{
-						Name: sidecarName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 1,
-							},
+				},
+				{
+					Name: sidecarName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 1,
 						},
 					},
 				},
 			},
-			{
-				name: "driverContainerExitCodeNonZeroSidecarExitCodeZero ContainerStatus",
-				value: []corev1.ContainerStatus{
-					{
-						Name: common.SparkDriverContainerName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 1,
-							},
+		},
+		{
+			name: "driverContainerExitCodeNonZeroSidecarExitCodeZero ContainerStatus",
+			value: []corev1.ContainerStatus{
+				{
+					Name: common.SparkDriverContainerName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 1,
 						},
 					},
-					{
-						Name: sidecarName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 0,
-							},
+				},
+				{
+					Name: sidecarName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 0,
 						},
 					},
 				},
 			},
-			{
-				name: "driverContainerExitCodeNonZeroSidecarExitCodeNonZero ContainerStatus",
-				value: []corev1.ContainerStatus{
-					{
-						Name: common.SparkDriverContainerName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 1,
-							},
+		},
+		{
+			name: "driverContainerExitCodeNonZeroSidecarExitCodeNonZero ContainerStatus",
+			value: []corev1.ContainerStatus{
+				{
+					Name: common.SparkDriverContainerName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 1,
 						},
 					},
-					{
-						Name: sidecarName,
-						State: corev1.ContainerState{
-							Terminated: &corev1.ContainerStateTerminated{
-								ExitCode: 1,
-							},
+				},
+				{
+					Name: sidecarName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							ExitCode: 1,
 						},
 					},
 				},
 			},
-		}
-		// emptyContainerStatus := []corev1.ContainerStatus{}
-		// driverContainerExitCodeZero := []corev1.ContainerStatus{
-		// 	{
-		// 		Name: common.SparkDriverContainerName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 0,
-		// 			},
-		// 		},
-		// 	},
-		// }
-		// driverContainerExitCodeNonZero := []corev1.ContainerStatus{
-		// 	{
-		// 		Name: common.SparkDriverContainerName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 1,
-		// 			},
-		// 		},
-		// 	},
-		// }
-		// driverContainerExitCodeZeroSidecarExitCodeZero := []corev1.ContainerStatus{
-		// 	{
-		// 		Name: common.SparkDriverContainerName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 0,
-		// 			},
-		// 		},
-		// 	},
-		// 	{
-		// 		Name: sidecarName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 0,
-		// 			},
-		// 		},
-		// 	},
-		// }
-		// driverContainerExitCodeZeroSidecarExitCodeNonZero := []corev1.ContainerStatus{
-		// 	{
-		// 		Name: common.SparkDriverContainerName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 0,
-		// 			},
-		// 		},
-		// 	},
-		// 	{
-		// 		Name: sidecarName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 1,
-		// 			},
-		// 		},
-		// 	},
-		// }
-		// driverContainerExitCodeNonZeroSidecarExitCodeZero := []corev1.ContainerStatus{
-		// 	{
-		// 		Name: common.SparkDriverContainerName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 1,
-		// 			},
-		// 		},
-		// 	},
-		// 	{
-		// 		Name: sidecarName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 0,
-		// 			},
-		// 		},
-		// 	},
-		// }
-		// driverContainerExitCodeNonZeroSidecarExitCodeNonZero := []corev1.ContainerStatus{
-		// 	{
-		// 		Name: common.SparkDriverContainerName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 1,
-		// 			},
-		// 		},
-		// 	},
-		// 	{
-		// 		Name: sidecarName,
-		// 		State: corev1.ContainerState{
-		// 			Terminated: &corev1.ContainerStateTerminated{
-		// 				ExitCode: 1,
-		// 			},
-		// 		},
-		// 	},
-		// }
+		},
+	}
 
+	Context("Getting driver state for PodPending", func() {
 		for _, containerStatusInputParam := range containerStatusInputParams {
 			for _, monitoredSidecarsInputParam := range monitoredSidecarsInputParams {
 				for _, failOnMonitoredSidecarZeroExitCodeInputParam := range failOnMonitoredSidecarZeroExitCodeInputParams {
-					It("PodPending state for " + containerStatusInputParam.name + monitoredSidecarsInputParam.name + failOnMonitoredSidecarZeroExitCodeInputParam.name, func() {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParam.name, monitoredSidecarsInputParam.name, failOnMonitoredSidecarZeroExitCodeInputParam.name), func() {
 						test := func(podPhase corev1.PodPhase, containerStatuses []corev1.ContainerStatus, monitoredSidecars *string, failOnMonitoredSidecarZeroExitCode *bool, expectedDriverState v1beta2.DriverState) {
 							pod := &corev1.Pod{
 								Status: corev1.PodStatus{
@@ -1155,136 +1063,8 @@ var _ = Describe("GetDriverState2", func(){
 
 						test(corev1.PodPending, containerStatusInputParam.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStatePending)
 					})
-
-					// DescribeTable("Should return the correct driver state for PodPending phase",
-					// 	func(podPhase corev1.PodPhase, containerStatuses []corev1.ContainerStatus, monitoredSidecars *string, failOnMonitoredSidecarZeroExitCode *bool, expectedDriverState v1beta2.DriverState) {
-					// 		pod := &corev1.Pod{
-					// 			Status: corev1.PodStatus{
-					// 				Phase: podPhase,
-					// 				ContainerStatuses: containerStatuses,
-					// 			},
-					// 		}
-					// 		Expect(util.GetDriverState(pod, monitoredSidecars, failOnMonitoredSidecarZeroExitCode)).To(Equal(expectedDriverState))
-					// 	},
-					// 	Entry(containerStatuscontainerStatusInputParams.name, corev1.PodPending, containerStatuscontainerStatusInputParams.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStatePending),
-					// )
 				}
 			}
 		}
-	// 	DescribeTable("Should return the correct driver state for PodPending phase",
-	// 		func(podPhase corev1.PodPhase, containerStatuses []corev1.ContainerStatus, monitoredSidecars *string, failOnMonitoredSidecarZeroExitCode *bool, expectedDriverState v1beta2.DriverState) {
-	// 			pod := &corev1.Pod{
-	// 				Status: corev1.PodStatus{
-	// 					Phase: podPhase,
-	// 					ContainerStatuses: containerStatuses,
-	// 				},
-	// 			}
-	// 			Expect(util.GetDriverState(pod, monitoredSidecars, failOnMonitoredSidecarZeroExitCode)).To(Equal(expectedDriverState))
-	// 		},
-	// 		Entry("emptyContainerStatus, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, emptyContainerStatus, nil, nil, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, emptyContainerStatus, nil, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, emptyContainerStatus, nil, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, emptyContainerStatus, &paramEmpty, nil, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, emptyContainerStatus, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, emptyContainerStatus, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, emptyContainerStatus, &sidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, emptyContainerStatus, &sidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, emptyContainerStatus, &sidecarName, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, emptyContainerStatus, &differentSidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, emptyContainerStatus, &differentSidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("emptyContainerStatus, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, emptyContainerStatus, &differentSidecarName, &paramTrue, v1beta2.DriverStatePending),
-
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZero, nil, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZero, nil, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZero, nil, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZero, &paramEmpty, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZero, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZero, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZero, &sidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZero, &sidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZero, &sidecarName, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZero, &differentSidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZero, &differentSidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZero, &differentSidecarName, &paramTrue, v1beta2.DriverStatePending),
-
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZero, nil, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZero, nil, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZero, nil, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZero, &paramEmpty, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZero, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZero, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZero, &sidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZero, &sidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZero, &sidecarName, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZero, &differentSidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZero, &differentSidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZero, &differentSidecarName, &paramTrue, v1beta2.DriverStatePending),
-
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, nil, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, nil, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, nil, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &paramEmpty, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &sidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &sidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &sidecarName, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &differentSidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &differentSidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeZero, &differentSidecarName, &paramTrue, v1beta2.DriverStatePending),
-
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, nil, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, nil, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, nil, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &paramEmpty, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &sidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &sidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &sidecarName, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &differentSidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &differentSidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeZeroSidecarExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeZeroSidecarExitCodeNonZero, &differentSidecarName, &paramTrue, v1beta2.DriverStatePending),
-
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, nil, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, nil, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, nil, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &paramEmpty, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &sidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &sidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &sidecarName, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &differentSidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &differentSidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeZero, &differentSidecarName, &paramTrue, v1beta2.DriverStatePending),
-
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, nil, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, nil, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, nil, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &paramEmpty, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &sidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &sidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='sidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &sidecarName, &paramTrue, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &differentSidecarName, nil, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &differentSidecarName, &paramFalse, v1beta2.DriverStatePending),
-	// 		Entry("driverContainerExitCodeNonZeroSidecarExitCodeNonZero, monitoredSidecars='differentSidecar', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, driverContainerExitCodeNonZeroSidecarExitCodeNonZero, &differentSidecarName, &paramTrue, v1beta2.DriverStatePending),
-
-	// 		// Entry("PodSucceeded, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodSucceeded, nil, nil, v1beta2.DriverStateCompleted),
-	// 		// Entry("PodSucceeded, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodSucceeded, nil, &paramFalse, v1beta2.DriverStateCompleted),
-	// 		// Entry("PodSucceeded, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodSucceeded, nil, &paramTrue, v1beta2.DriverStateCompleted),
-	// 		// Entry("PodSucceeded, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodSucceeded, &paramEmpty, nil, v1beta2.DriverStateCompleted),
-	// 		// Entry("PodSucceeded, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodSucceeded, &paramEmpty, &paramFalse, v1beta2.DriverStateCompleted),
-	// 		// Entry("PodSucceeded, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodSucceeded, &paramEmpty, &paramTrue, v1beta2.DriverStateCompleted),
-
-	// 		// Entry("PodUnknown, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodUnknown, nil, nil, v1beta2.DriverStateUnknown),
-	// 		// Entry("PodUnknown, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodUnknown, nil, &paramFalse, v1beta2.DriverStateUnknown),
-	// 		// Entry("PodUnknown, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodUnknown, nil, &paramTrue, v1beta2.DriverStateUnknown),
-	// 		// Entry("PodUnknown, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodUnknown, &paramEmpty, nil, v1beta2.DriverStateUnknown),
-	// 		// Entry("PodUnknown, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodUnknown, &paramEmpty, &paramFalse, v1beta2.DriverStateUnknown),
-	// 		// Entry("PodUnknown, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodUnknown, &paramEmpty, &paramTrue, v1beta2.DriverStateUnknown),
-	// 	)
 	})
 })
