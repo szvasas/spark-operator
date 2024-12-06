@@ -895,12 +895,26 @@ var _ = Describe("GetDriverState2", func(){
 				}
 				Expect(util.GetDriverState(pod, monitoredSidecars, failOnMonitoredSidecarZeroExitCode)).To(Equal(expectedDriverState))
 			},
-			Entry("PodPending monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, nil, nil, v1beta2.DriverStatePending),
-			Entry("PodPending monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, nil, &paramFalse, v1beta2.DriverStatePending),
-			Entry("PodPending monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, nil, &paramTrue, v1beta2.DriverStatePending),
-			Entry("PodPending monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, &paramEmpty, nil, v1beta2.DriverStatePending),
-			Entry("PodPending monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
-			Entry("PodPending monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
+			Entry("PodPending, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, nil, nil, v1beta2.DriverStatePending),
+			Entry("PodPending, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, nil, &paramFalse, v1beta2.DriverStatePending),
+			Entry("PodPending, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, nil, &paramTrue, v1beta2.DriverStatePending),
+			Entry("PodPending, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodPending, &paramEmpty, nil, v1beta2.DriverStatePending),
+			Entry("PodPending, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodPending, &paramEmpty, &paramFalse, v1beta2.DriverStatePending),
+			Entry("PodPending, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodPending, &paramEmpty, &paramTrue, v1beta2.DriverStatePending),
+
+			Entry("PodSucceeded, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodSucceeded, nil, nil, v1beta2.DriverStateCompleted),
+			Entry("PodSucceeded, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodSucceeded, nil, &paramFalse, v1beta2.DriverStateCompleted),
+			Entry("PodSucceeded, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodSucceeded, nil, &paramTrue, v1beta2.DriverStateCompleted),
+			Entry("PodSucceeded, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodSucceeded, &paramEmpty, nil, v1beta2.DriverStateCompleted),
+			Entry("PodSucceeded, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodSucceeded, &paramEmpty, &paramFalse, v1beta2.DriverStateCompleted),
+			Entry("PodSucceeded, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodSucceeded, &paramEmpty, &paramTrue, v1beta2.DriverStateCompleted),
+
+			Entry("PodUnknown, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=nil", corev1.PodUnknown, nil, nil, v1beta2.DriverStateUnknown),
+			Entry("PodUnknown, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=false", corev1.PodUnknown, nil, &paramFalse, v1beta2.DriverStateUnknown),
+			Entry("PodUnknown, monitoredSidecars=nil, failOnMonitoredSidecarZeroExitCode=true", corev1.PodUnknown, nil, &paramTrue, v1beta2.DriverStateUnknown),
+			Entry("PodUnknown, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=nil", corev1.PodUnknown, &paramEmpty, nil, v1beta2.DriverStateUnknown),
+			Entry("PodUnknown, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=false", corev1.PodUnknown, &paramEmpty, &paramFalse, v1beta2.DriverStateUnknown),
+			Entry("PodUnknown, monitoredSidecars='', failOnMonitoredSidecarZeroExitCode=true", corev1.PodUnknown, &paramEmpty, &paramTrue, v1beta2.DriverStateUnknown),
 		)
 	})
 })
