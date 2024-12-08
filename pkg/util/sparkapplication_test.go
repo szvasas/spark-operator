@@ -888,158 +888,107 @@ var _ = Describe("GetDriverState2", func(){
 	paramEmpty := ""
 	sidecarName := "sidecar"
 	differentSidecarName := "differentSidecar"
-	failOnMonitoredSidecarZeroExitCodeInputParams := []struct {
-		name	string
-		value	*bool
-	}{
-		{
-			name: "failOnMonitoredSidecarZeroExitCode=true",
-			value: &paramTrue,
-		},
-		{
-			name: "failOnMonitoredSidecarZeroExitCode=false",
-			value: &paramFalse,
-		},
-		{
-			name: "failOnMonitoredSidecarZeroExitCode=nil",
-			value: nil,
-		},
+	failOnMonitoredSidecarZeroExitCodeInputParams := map[string]*bool{
+		"failOnMonitoredSidecarZeroExitCode=true":  &paramTrue,
+		"failOnMonitoredSidecarZeroExitCode=false": &paramFalse,
+		"failOnMonitoredSidecarZeroExitCode=nil":   nil,
 	}
-	monitoredSidecarsInputParams := []struct {
-		name	string
-		value	*string
-	}{
-		{
-			name: "monitoredSidecars=nil",
-			value: nil,
-		},
-		{
-			name: "monitoredSidecars=''",
-			value: &paramEmpty,
-		},
-		{
-			name: "monitoredSidecars='sidecar'",
-			value: &sidecarName,
-		},
-		{
-			name: "monitoredSidecars='differentSidecar'",
-			value: &differentSidecarName,
-		},
+	monitoredSidecarsInputParams := map[string]*string{
+		"monitoredSidecars=nil":              nil,
+		"monitoredSidecars=''":               &paramEmpty,
+		"monitoredSidecars='sidecar'":        &sidecarName,
+		"monitoredSidecars='differentSidecar'": &differentSidecarName,
 	}
-	containerStatusInputParams := []struct {
-		name	string
-		value	[]corev1.ContainerStatus
-	}{
-		{
-			name: "empty ContainerStatus",
-			value: []corev1.ContainerStatus{},
-		},
-		{
-			name: "driverContainerExitCodeZero ContainerStatus",
-			value: []corev1.ContainerStatus{
-				{
-					Name: common.SparkDriverContainerName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 0,
-						},
+	containerStatusInputParams := map[string][]corev1.ContainerStatus{
+		"empty ContainerStatus": {},
+		"driverContainerExitCodeZero ContainerStatus": {
+			{
+				Name: common.SparkDriverContainerName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 0,
 					},
 				},
 			},
 		},
-		{
-			name: "driverContainerExitCodeNonZero ContainerStatus",
-			value: []corev1.ContainerStatus{
-				{
-					Name: common.SparkDriverContainerName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 1,
-						},
+		"driverContainerExitCodeNonZero ContainerStatus": {
+			{
+				Name: common.SparkDriverContainerName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 1,
 					},
 				},
 			},
 		},
-		{
-			name: "driverContainerExitCodeZeroSidecarExitCodeZero ContainerStatus",
-			value: []corev1.ContainerStatus{
-				{
-					Name: common.SparkDriverContainerName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 0,
-						},
+		"driverContainerExitCodeZeroSidecarExitCodeZero ContainerStatus": {
+			{
+				Name: common.SparkDriverContainerName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 0,
 					},
 				},
-				{
-					Name: sidecarName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 0,
-						},
+			},
+			{
+				Name: sidecarName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 0,
 					},
 				},
 			},
 		},
-		{
-			name: "driverContainerExitCodeZeroSidecarExitCodeNonZero ContainerStatus",
-			value: []corev1.ContainerStatus{
-				{
-					Name: common.SparkDriverContainerName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 0,
-						},
+		"driverContainerExitCodeZeroSidecarExitCodeNonZero ContainerStatus": {
+			{
+				Name: common.SparkDriverContainerName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 0,
 					},
 				},
-				{
-					Name: sidecarName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 1,
-						},
+			},
+			{
+				Name: sidecarName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 1,
 					},
 				},
 			},
 		},
-		{
-			name: "driverContainerExitCodeNonZeroSidecarExitCodeZero ContainerStatus",
-			value: []corev1.ContainerStatus{
-				{
-					Name: common.SparkDriverContainerName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 1,
-						},
+		"driverContainerExitCodeNonZeroSidecarExitCodeZero ContainerStatus": {
+			{
+				Name: common.SparkDriverContainerName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 1,
 					},
 				},
-				{
-					Name: sidecarName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 0,
-						},
+			},
+			{
+				Name: sidecarName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 0,
 					},
 				},
 			},
 		},
-		{
-			name: "driverContainerExitCodeNonZeroSidecarExitCodeNonZero ContainerStatus",
-			value: []corev1.ContainerStatus{
-				{
-					Name: common.SparkDriverContainerName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 1,
-						},
+		"driverContainerExitCodeNonZeroSidecarExitCodeNonZero ContainerStatus": {
+			{
+				Name: common.SparkDriverContainerName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 1,
 					},
 				},
-				{
-					Name: sidecarName,
-					State: corev1.ContainerState{
-						Terminated: &corev1.ContainerStateTerminated{
-							ExitCode: 1,
-						},
+			},
+			{
+				Name: sidecarName,
+				State: corev1.ContainerState{
+					Terminated: &corev1.ContainerStateTerminated{
+						ExitCode: 1,
 					},
 				},
 			},
@@ -1056,11 +1005,11 @@ var _ = Describe("GetDriverState2", func(){
 	}
 
 	Context("Driver state for PodPending", func() {
-		for _, containerStatusInputParam := range containerStatusInputParams {
-			for _, monitoredSidecarsInputParam := range monitoredSidecarsInputParams {
-				for _, failOnMonitoredSidecarZeroExitCodeInputParam := range failOnMonitoredSidecarZeroExitCodeInputParams {
-					It(fmt.Sprintf("%s %s %s", containerStatusInputParam.name, monitoredSidecarsInputParam.name, failOnMonitoredSidecarZeroExitCodeInputParam.name), func() {
-						test(corev1.PodPending, containerStatusInputParam.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStatePending)
+		for containerStatusInputParamKey, containerStatusInputParamValue := range containerStatusInputParams {
+			for monitoredSidecarsInputParamKey, monitoredSidecarsInputParamValue := range monitoredSidecarsInputParams {
+				for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParamKey, monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
+						test(corev1.PodPending, containerStatusInputParamValue, monitoredSidecarsInputParamValue, failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStatePending)
 					})
 				}
 			}
@@ -1068,11 +1017,11 @@ var _ = Describe("GetDriverState2", func(){
 	})
 
 	Context("Driver state for PodSucceeded", func() {
-		for _, containerStatusInputParam := range containerStatusInputParams {
-			for _, monitoredSidecarsInputParam := range monitoredSidecarsInputParams {
-				for _, failOnMonitoredSidecarZeroExitCodeInputParam := range failOnMonitoredSidecarZeroExitCodeInputParams {
-					It(fmt.Sprintf("%s %s %s", containerStatusInputParam.name, monitoredSidecarsInputParam.name, failOnMonitoredSidecarZeroExitCodeInputParam.name), func() {
-						test(corev1.PodSucceeded, containerStatusInputParam.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStateCompleted)
+		for containerStatusInputParamKey, containerStatusInputParamValue := range containerStatusInputParams {
+			for monitoredSidecarsInputParamKey, monitoredSidecarsInputParamValue := range monitoredSidecarsInputParams {
+				for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParamKey, monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
+						test(corev1.PodSucceeded, containerStatusInputParamValue, monitoredSidecarsInputParamValue, failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStateCompleted)
 					})
 				}
 			}
@@ -1080,11 +1029,11 @@ var _ = Describe("GetDriverState2", func(){
 	})
 
 	Context("Driver state for PodUnknown", func() {
-		for _, containerStatusInputParam := range containerStatusInputParams {
-			for _, monitoredSidecarsInputParam := range monitoredSidecarsInputParams {
-				for _, failOnMonitoredSidecarZeroExitCodeInputParam := range failOnMonitoredSidecarZeroExitCodeInputParams {
-					It(fmt.Sprintf("%s %s %s", containerStatusInputParam.name, monitoredSidecarsInputParam.name, failOnMonitoredSidecarZeroExitCodeInputParam.name), func() {
-						test(corev1.PodUnknown, containerStatusInputParam.value, monitoredSidecarsInputParam.value, failOnMonitoredSidecarZeroExitCodeInputParam.value, v1beta2.DriverStateUnknown)
+		for containerStatusInputParamKey, containerStatusInputParamValue := range containerStatusInputParams {
+			for monitoredSidecarsInputParamKey, monitoredSidecarsInputParamValue := range monitoredSidecarsInputParams {
+				for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParamKey, monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
+						test(corev1.PodUnknown, containerStatusInputParamValue, monitoredSidecarsInputParamValue, failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStateUnknown)
 					})
 				}
 			}
