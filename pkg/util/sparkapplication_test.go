@@ -900,8 +900,8 @@ var _ = Describe("GetDriverState2", func(){
 		"monitoredSidecars='differentSidecar'": &differentSidecarName,
 	}
 	containerStatusInputParams := map[string][]corev1.ContainerStatus{
-		"empty ContainerStatus": {},
-		"driverContainerExitCodeZero ContainerStatus": {
+		"emptyContainerStatus": {},
+		"driverContainerExitCodeZero": {
 			{
 				Name: common.SparkDriverContainerName,
 				State: corev1.ContainerState{
@@ -911,7 +911,7 @@ var _ = Describe("GetDriverState2", func(){
 				},
 			},
 		},
-		"driverContainerExitCodeNonZero ContainerStatus": {
+		"driverContainerExitCodeNonZero": {
 			{
 				Name: common.SparkDriverContainerName,
 				State: corev1.ContainerState{
@@ -921,7 +921,7 @@ var _ = Describe("GetDriverState2", func(){
 				},
 			},
 		},
-		"driverContainerExitCodeZeroSidecarExitCodeZero ContainerStatus": {
+		"driverContainerExitCodeZeroSidecarExitCodeZero": {
 			{
 				Name: common.SparkDriverContainerName,
 				State: corev1.ContainerState{
@@ -939,7 +939,7 @@ var _ = Describe("GetDriverState2", func(){
 				},
 			},
 		},
-		"driverContainerExitCodeZeroSidecarExitCodeNonZero ContainerStatus": {
+		"driverContainerExitCodeZeroSidecarExitCodeNonZero": {
 			{
 				Name: common.SparkDriverContainerName,
 				State: corev1.ContainerState{
@@ -957,7 +957,7 @@ var _ = Describe("GetDriverState2", func(){
 				},
 			},
 		},
-		"driverContainerExitCodeNonZeroSidecarExitCodeZero ContainerStatus": {
+		"driverContainerExitCodeNonZeroSidecarExitCodeZero": {
 			{
 				Name: common.SparkDriverContainerName,
 				State: corev1.ContainerState{
@@ -975,7 +975,7 @@ var _ = Describe("GetDriverState2", func(){
 				},
 			},
 		},
-		"driverContainerExitCodeNonZeroSidecarExitCodeNonZero ContainerStatus": {
+		"driverContainerExitCodeNonZeroSidecarExitCodeNonZero": {
 			{
 				Name: common.SparkDriverContainerName,
 				State: corev1.ContainerState{
@@ -1034,6 +1034,30 @@ var _ = Describe("GetDriverState2", func(){
 				for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
 					It(fmt.Sprintf("%s %s %s", containerStatusInputParamKey, monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
 						test(corev1.PodUnknown, containerStatusInputParamValue, monitoredSidecarsInputParamValue, failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStateUnknown)
+					})
+				}
+			}
+		}
+	})
+
+	Context("Driver state for PodRunning when all containers are running", func() {
+		for _, containerStatusInputParamKey := range [1]string{"emptyContainerStatus"} {
+			for monitoredSidecarsInputParamKey, monitoredSidecarsInputParamValue := range monitoredSidecarsInputParams {
+				for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParamKey, monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
+						test(corev1.PodRunning, containerStatusInputParams[containerStatusInputParamKey], monitoredSidecarsInputParamValue, failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStateRunning)
+					})
+				}
+			}
+		}
+	})
+
+	Context("Driver state for PodRunning when driver container exited with code 0", func() {
+		for _, containerStatusInputParamKey := range [3]string{"driverContainerExitCodeZero", "driverContainerExitCodeZeroSidecarExitCodeZero", "driverContainerExitCodeZeroSidecarExitCodeNonZero"} {
+			for monitoredSidecarsInputParamKey, monitoredSidecarsInputParamValue := range monitoredSidecarsInputParams {
+				for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
+					It(fmt.Sprintf("%s %s %s", containerStatusInputParamKey, monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
+						test(corev1.PodRunning, containerStatusInputParams[containerStatusInputParamKey], monitoredSidecarsInputParamValue, failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStateCompleted)
 					})
 				}
 			}
