@@ -298,7 +298,7 @@ func GetDriverState(pod *corev1.Pod, monitoredSidecars *string, failOnMonitoredS
 			}
 			return v1beta2.DriverStateFailed
 		}
-		sidecarTerminatedState := GetFirstMonitoredSidecarTerminatedState(monitoredSidecars, pod)
+		sidecarTerminatedState := GetFirstMonitoredSidecarTerminatedState(pod, monitoredSidecars)
 		failOnZeroExitCode := failOnMonitoredSidecarZeroExitCode != nil && *failOnMonitoredSidecarZeroExitCode
 		if sidecarTerminatedState != nil && (sidecarTerminatedState.ExitCode != 0 || failOnZeroExitCode) {
 			return v1beta2.DriverStateFailed
@@ -338,7 +338,7 @@ func GetDriverContainerTerminatedState(pod *corev1.Pod) *corev1.ContainerStateTe
 	return GetContainerTerminatedState(pod, common.SparkDriverContainerName)
 }
 
-func GetFirstMonitoredSidecarTerminatedState(monitoredSidecars *string, pod *corev1.Pod) *corev1.ContainerStateTerminated {
+func GetFirstMonitoredSidecarTerminatedState(pod *corev1.Pod, monitoredSidecars *string) *corev1.ContainerStateTerminated {
 	if monitoredSidecars == nil || *monitoredSidecars == "" {
 		return nil
 	}
