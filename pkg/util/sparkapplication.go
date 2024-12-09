@@ -298,9 +298,9 @@ func GetDriverState(pod *corev1.Pod, monitoredSidecars *string, failOnMonitoredS
 			}
 			return v1beta2.DriverStateFailed
 		}
-		sidecarTerminatedState := GetFirstMonitoredSidecarTerminatedState(pod, monitoredSidecars)
+		sidecarTerminatedState := GetFirstTerminatedMonitoredSidecarStatus(pod, monitoredSidecars)
 		failOnZeroExitCode := failOnMonitoredSidecarZeroExitCode != nil && *failOnMonitoredSidecarZeroExitCode
-		if sidecarTerminatedState != nil && (sidecarTerminatedState.ExitCode != 0 || failOnZeroExitCode) {
+		if sidecarTerminatedState != nil && (sidecarTerminatedState.State.Terminated.ExitCode != 0 || failOnZeroExitCode) {
 			return v1beta2.DriverStateFailed
 		}
 		return v1beta2.DriverStateRunning
@@ -338,27 +338,29 @@ func GetDriverContainerTerminatedState(pod *corev1.Pod) *corev1.ContainerStateTe
 	return GetContainerTerminatedState(pod, common.SparkDriverContainerName)
 }
 
-func GetFirstMonitoredSidecarTerminatedState(pod *corev1.Pod, monitoredSidecars *string) *corev1.ContainerStateTerminated {
+func GetFirstTerminatedMonitoredSidecarStatus(pod *corev1.Pod, monitoredSidecars *string) *corev1.ContainerStatus {
 	if monitoredSidecars == nil || *monitoredSidecars == "" {
 		return nil
 	}
 	if *monitoredSidecars == common.MonitoredSidecarsAll {
-		return GetFirstSidecarTerminatedState(pod)
+		return GetFirstTerminatedSidecarStatus(pod)
 	}
+
 	sidecars := strings.Split(*monitoredSidecars, ",")
-	for _, sidecar := range sidecars {
-		state := GetContainerTerminatedState(pod, sidecar)
-		if state != nil {
-			return state
+	for _, c := range pod.Status.ContainerStatuses {
+		for _, sidecar := range sidecars {
+			if c.Name == sidecar && c.State.Terminated != nil {
+				return &c
+			}
 		}
 	}
 	return nil
 }
 
-func GetFirstSidecarTerminatedState(pod *corev1.Pod) *corev1.ContainerStateTerminated {
+func GetFirstTerminatedSidecarStatus(pod *corev1.Pod) *corev1.ContainerStatus {
 	for _, c := range pod.Status.ContainerStatuses {
 		if c.Name != common.SparkDriverContainerName && c.State.Terminated != nil {
-			return c.State.Terminated
+			return &c
 		}
 	}
 	return nil

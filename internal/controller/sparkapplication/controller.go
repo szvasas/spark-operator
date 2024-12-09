@@ -791,12 +791,12 @@ func (r *Reconciler) updateDriverState(_ context.Context, app *v1beta2.SparkAppl
 			app.Status.TerminationTime = metav1.Now()
 		}
 		if driverState == v1beta2.DriverStateFailed {
-			state := util.GetDriverContainerTerminatedState(driverPod);
-			sidecarState := util.GetFirstMonitoredSidecarTerminatedState(driverPod, app.Spec.Driver.MonitoredSidecars)
+			state := util.GetDriverContainerTerminatedState(driverPod)
+			terminatedSidecarStatus := util.GetFirstTerminatedMonitoredSidecarStatus(driverPod, app.Spec.Driver.MonitoredSidecars)
 			if state != nil && state.ExitCode != 0 {
 				app.Status.AppState.ErrorMessage = fmt.Sprintf("driver container failed with ExitCode: %d, Reason: %s", state.ExitCode, state.Reason)
-			} else if sidecarState != nil {
-				app.Status.AppState.ErrorMessage = fmt.Sprintf("monitored sidecar container completed with ExitCode: %d, Reason: %s", sidecarState.ExitCode, sidecarState.Reason)
+			} else if terminatedSidecarStatus != nil {
+				app.Status.AppState.ErrorMessage = fmt.Sprintf("monitored sidecar %s completed with ExitCode: %d, Reason: %s", terminatedSidecarStatus.Name, terminatedSidecarStatus.State.Terminated.ExitCode, terminatedSidecarStatus.State.Terminated.Reason)
 			} else {
 				app.Status.AppState.ErrorMessage = "driver container status missing"
 			}
