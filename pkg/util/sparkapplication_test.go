@@ -364,16 +364,18 @@ var _ = Describe("GetDriverState", func(){
 	paramEmpty := ""
 	sidecarName := "sidecar"
 	differentSidecarName := "differentSidecar"
+	allSidecars := common.MonitoredSidecarsAll
 	failOnMonitoredSidecarZeroExitCodeInputParams := map[string]*bool{
 		"failOnMonitoredSidecarZeroExitCode=true":  &paramTrue,
 		"failOnMonitoredSidecarZeroExitCode=false": &paramFalse,
 		"failOnMonitoredSidecarZeroExitCode=nil":   nil,
 	}
 	monitoredSidecarsInputParams := map[string]*string{
-		"monitoredSidecars=nil":              nil,
-		"monitoredSidecars=''":               &paramEmpty,
-		"monitoredSidecars='sidecar'":        &sidecarName,
+		"monitoredSidecars=nil":              	nil,
+		"monitoredSidecars=''":               	&paramEmpty,
+		"monitoredSidecars='sidecar'":        	&sidecarName,
 		"monitoredSidecars='differentSidecar'": &differentSidecarName,
+		"monitoredSidecars='_all'": 			&allSidecars,
 	}
 	containerStatusInputParams := map[string][]corev1.ContainerStatus{
 		"emptyContainerStatus": {},
@@ -583,16 +585,20 @@ var _ = Describe("GetDriverState", func(){
 		}
 
 		// If the completed sidecar is monitored but the failOnMonitoredSidecarZeroExitCode flag is not true, the status should be DriverStateRunning
-		for _, failOnMonitoredSidecarZeroExitCodeInputParamKey := range [3]string{"failOnMonitoredSidecarZeroExitCode=false", "failOnMonitoredSidecarZeroExitCode=nil"} {
-			It(fmt.Sprintf("%s %s %s", "sidecarContainerExitCodeZero", "monitoredSidecars='sidecar'", failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
-				test(corev1.PodRunning, containerStatusInputParams["sidecarContainerExitCodeZero"], monitoredSidecarsInputParams["monitoredSidecars='sidecar'"], failOnMonitoredSidecarZeroExitCodeInputParams[failOnMonitoredSidecarZeroExitCodeInputParamKey], v1beta2.DriverStateRunning)
-			})
+		for _, monitoredSidecarsInputParamKey := range [2]string{"monitoredSidecars='sidecar'", "monitoredSidecars='_all'"} {
+			for _, failOnMonitoredSidecarZeroExitCodeInputParamKey := range [2]string{"failOnMonitoredSidecarZeroExitCode=false", "failOnMonitoredSidecarZeroExitCode=nil"} {
+				It(fmt.Sprintf("%s %s %s", "sidecarContainerExitCodeZero", monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
+					test(corev1.PodRunning, containerStatusInputParams["sidecarContainerExitCodeZero"], monitoredSidecarsInputParams[monitoredSidecarsInputParamKey], failOnMonitoredSidecarZeroExitCodeInputParams[failOnMonitoredSidecarZeroExitCodeInputParamKey], v1beta2.DriverStateRunning)
+				})
+			}
 		}
 
 		// If the completed sidecar is monitored and the failOnMonitoredSidecarZeroExitCode flag is true, the status should be DriverStateFailed
-		It(fmt.Sprintf("%s %s %s", "sidecarContainerExitCodeZero", "monitoredSidecars='sidecar'", "failOnMonitoredSidecarZeroExitCode=true"), func() {
-			test(corev1.PodRunning, containerStatusInputParams["sidecarContainerExitCodeZero"], monitoredSidecarsInputParams["monitoredSidecars='sidecar'"], failOnMonitoredSidecarZeroExitCodeInputParams["failOnMonitoredSidecarZeroExitCode=true"], v1beta2.DriverStateFailed)
-		})
+		for _, monitoredSidecarsInputParamKey := range [2]string{"monitoredSidecars='sidecar'", "monitoredSidecars='_all'"} {
+			It(fmt.Sprintf("%s %s %s", "sidecarContainerExitCodeZero", monitoredSidecarsInputParamKey, "failOnMonitoredSidecarZeroExitCode=true"), func() {
+				test(corev1.PodRunning, containerStatusInputParams["sidecarContainerExitCodeZero"], monitoredSidecarsInputParams[monitoredSidecarsInputParamKey], failOnMonitoredSidecarZeroExitCodeInputParams["failOnMonitoredSidecarZeroExitCode=true"], v1beta2.DriverStateFailed)
+			})
+		}
 	})
 
 	Context("Driver state for PodRunning when only the sidecar container exited with a non-zero code", func() {
@@ -606,10 +612,12 @@ var _ = Describe("GetDriverState", func(){
 		}
 
 		// If the failed sidecar is monitored then the status should be DriverStateFailed
-		for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
-			It(fmt.Sprintf("%s %s %s", "sidecarContainerExitCodeNonZero", "monitoredSidecars='sidecar'", failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
-				test(corev1.PodRunning, containerStatusInputParams["sidecarContainerExitCodeNonZero"], monitoredSidecarsInputParams["monitoredSidecars='sidecar'"], failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStateFailed)
-			})
+		for _, monitoredSidecarsInputParamKey := range [2]string{"monitoredSidecars='sidecar'", "monitoredSidecars='_all'"} {
+			for failOnMonitoredSidecarZeroExitCodeInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamValue := range failOnMonitoredSidecarZeroExitCodeInputParams {
+				It(fmt.Sprintf("%s %s %s", "sidecarContainerExitCodeNonZero", monitoredSidecarsInputParamKey, failOnMonitoredSidecarZeroExitCodeInputParamKey), func() {
+					test(corev1.PodRunning, containerStatusInputParams["sidecarContainerExitCodeNonZero"], monitoredSidecarsInputParams[monitoredSidecarsInputParamKey], failOnMonitoredSidecarZeroExitCodeInputParamValue, v1beta2.DriverStateFailed)
+				})
+			}
 		}
 	})
 

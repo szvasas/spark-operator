@@ -339,13 +339,26 @@ func GetDriverContainerTerminatedState(pod *corev1.Pod) *corev1.ContainerStateTe
 }
 
 func GetFirstMonitoredSidecarTerminatedState(monitoredSidecars *string, pod *corev1.Pod) *corev1.ContainerStateTerminated {
-	if monitoredSidecars != nil && *monitoredSidecars != "" {
-		sidecars := strings.Split(*monitoredSidecars, ",")
-		for _, sidecar := range sidecars {
-			state := GetContainerTerminatedState(pod, sidecar)
-			if state != nil {
-				return state
-			}
+	if monitoredSidecars == nil || *monitoredSidecars == "" {
+		return nil
+	}
+	if *monitoredSidecars == common.MonitoredSidecarsAll {
+		return GetFirstSidecarTerminatedState(pod)
+	}
+	sidecars := strings.Split(*monitoredSidecars, ",")
+	for _, sidecar := range sidecars {
+		state := GetContainerTerminatedState(pod, sidecar)
+		if state != nil {
+			return state
+		}
+	}
+	return nil
+}
+
+func GetFirstSidecarTerminatedState(pod *corev1.Pod) *corev1.ContainerStateTerminated {
+	for _, c := range pod.Status.ContainerStatuses {
+		if c.Name != common.SparkDriverContainerName && c.State.Terminated != nil {
+			return c.State.Terminated
 		}
 	}
 	return nil

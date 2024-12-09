@@ -339,6 +339,8 @@ const (
 	DefaultSparkWebUIPort int32 = 4040
 
 	DefaultSparkWebUIPortName = "spark-driver-ui-port"
+
+	MonitoredSidecarsAll = "_all"
 )
 
 // https://spark.apache.org/docs/latest/configuration.html
