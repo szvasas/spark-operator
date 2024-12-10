@@ -77,11 +77,25 @@ func (f *sparkPodEventFilter) Update(e event.UpdateEvent) bool {
 		return false
 	}
 
-	if newPod.Status.Phase == oldPod.Status.Phase {
+	if newPod.Status.Phase == oldPod.Status.Phase && containerStatusesMatch(oldPod, newPod) {
 		return false
 	}
 
 	return f.filter(newPod)
+}
+
+func containerStatusesMatch(oldPod *corev1.Pod, newPod *corev1.Pod) bool {
+	if len(oldPod.Status.ContainerStatuses) != len(newPod.Status.ContainerStatuses) {
+		return false
+	}
+	for i, oldContainerStatus := range oldPod.Status.ContainerStatuses {
+		if (oldContainerStatus.State.Terminated != nil && newPod.Status.ContainerStatuses[i].State.Terminated == nil) || 
+		   (oldContainerStatus.State.Terminated == nil && newPod.Status.ContainerStatuses[i].State.Terminated != nil) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Delete implements predicate.Predicate.

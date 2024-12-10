@@ -18,6 +18,8 @@ package sparkapplication
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -77,16 +79,28 @@ func (h *SparkPodEventHandler) Update(ctx context.Context, event event.UpdateEve
 		return
 	}
 
-	if newPod.Status.Phase == oldPod.Status.Phase {
-		return
-	}
-
-	logger.Info("Spark pod updated", "name", newPod.Name, "namespace", newPod.Namespace, "oldPhase", oldPod.Status.Phase, "newPhase", newPod.Status.Phase)
+	oldContainerStates := containerStatesToString(oldPod.Status.ContainerStatuses)
+	newContainerStates := containerStatesToString(newPod.Status.ContainerStatuses)
+	logger.Info("Spark pod updated", "name", newPod.Name, "namespace", newPod.Namespace, "oldPhase", oldPod.Status.Phase, "newPhase", newPod.Status.Phase,
+		"oldContainerStates", oldContainerStates, "newContainerStates", newContainerStates)
 	h.enqueueSparkAppForUpdate(ctx, newPod, queue)
 
 	if h.metrics != nil && util.IsExecutorPod(oldPod) && util.IsExecutorPod(newPod) {
 		h.metrics.HandleSparkExecutorUpdate(oldPod, newPod)
 	}
+}
+
+func containerStatesToString(containerStatuses []corev1.ContainerStatus) string {
+	var sb strings.Builder
+    sb.WriteString("[")
+    for i, containerStatus := range containerStatuses {
+        if i > 0 {
+            sb.WriteString(", ")
+        }
+        sb.WriteString(fmt.Sprintf("{ContainerName: %s, State: %s}", containerStatus.Name, containerStatus.State))
+    }
+    sb.WriteString("]")
+    return sb.String()
 }
 
 // Delete implements handler.EventHandler.
