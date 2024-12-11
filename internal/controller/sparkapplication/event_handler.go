@@ -92,15 +92,15 @@ func (h *SparkPodEventHandler) Update(ctx context.Context, event event.UpdateEve
 
 func containerStatesToString(containerStatuses []corev1.ContainerStatus) string {
 	var sb strings.Builder
-    sb.WriteString("[")
-    for i, containerStatus := range containerStatuses {
-        if i > 0 {
-            sb.WriteString(", ")
-        }
-        sb.WriteString(fmt.Sprintf("{ContainerName: %s, State: %s}", containerStatus.Name, containerStatus.State))
-    }
-    sb.WriteString("]")
-    return sb.String()
+	sb.WriteString("[")
+	for i, containerStatus := range containerStatuses {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(fmt.Sprintf("{ContainerName: %s, State: %s}", containerStatus.Name, containerStatus.State))
+	}
+	sb.WriteString("]")
+	return sb.String()
 }
 
 // Delete implements handler.EventHandler.

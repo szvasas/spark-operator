@@ -89,8 +89,8 @@ func containerStatusesMatch(oldPod *corev1.Pod, newPod *corev1.Pod) bool {
 		return false
 	}
 	for i, oldContainerStatus := range oldPod.Status.ContainerStatuses {
-		if (oldContainerStatus.State.Terminated != nil && newPod.Status.ContainerStatuses[i].State.Terminated == nil) || 
-		   (oldContainerStatus.State.Terminated == nil && newPod.Status.ContainerStatuses[i].State.Terminated != nil) {
+		if (oldContainerStatus.State.Terminated != nil && newPod.Status.ContainerStatuses[i].State.Terminated == nil) ||
+			(oldContainerStatus.State.Terminated == nil && newPod.Status.ContainerStatuses[i].State.Terminated != nil) {
 			return false
 		}
 	}

@@ -358,7 +358,7 @@ var _ = Describe("DriverStateToApplicationState", func() {
 	})
 })
 
-var _ = Describe("GetDriverState", func(){
+var _ = Describe("GetDriverState", func() {
 	paramFalse := false
 	paramTrue := true
 	paramEmpty := ""
@@ -371,11 +371,11 @@ var _ = Describe("GetDriverState", func(){
 		"failOnMonitoredSidecarZeroExitCode=nil":   nil,
 	}
 	monitoredSidecarsInputParams := map[string]*string{
-		"monitoredSidecars=nil":              		nil,
-		"monitoredSidecars=''":               		&paramEmpty,
-		"monitoredSidecars='sidecar,sidecar2'":     &sidecarList,
-		"monitoredSidecars='unknownSidecar'": 		&unknownSidecar,
-		"monitoredSidecars='_all'": 				&allSidecars,
+		"monitoredSidecars=nil":                nil,
+		"monitoredSidecars=''":                 &paramEmpty,
+		"monitoredSidecars='sidecar,sidecar2'": &sidecarList,
+		"monitoredSidecars='unknownSidecar'":   &unknownSidecar,
+		"monitoredSidecars='_all'":             &allSidecars,
 	}
 	containerStatusInputParams := map[string][]corev1.ContainerStatus{
 		"emptyContainerStatus": {},
@@ -495,7 +495,7 @@ var _ = Describe("GetDriverState", func(){
 	test := func(podPhase corev1.PodPhase, containerStatuses []corev1.ContainerStatus, monitoredSidecars *string, failOnMonitoredSidecarZeroExitCode *bool, expectedDriverState v1beta2.DriverState) {
 		pod := &corev1.Pod{
 			Status: corev1.PodStatus{
-				Phase: podPhase,
+				Phase:             podPhase,
 				ContainerStatuses: containerStatuses,
 			},
 		}
