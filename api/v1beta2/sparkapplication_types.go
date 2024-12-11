@@ -551,6 +551,7 @@ type DriverSpec struct {
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 	// MonitoredSidecars is a list of sidecar containers in the driver pod that should be monitored for driver health.
 	// If any of these containers fail, the driver will be considered failed.
+	// '_all' is a special value that indicates all sidecars in the driver pod should be monitored.
 	// +optional
 	MonitoredSidecars *string `json:"monitoredSidecars,omitempty"`
 	// FailOnMonitoredSidecarZeroExitCode specifies whether the driver should fail even if a checked sidecar completes with a 0 exit code.
