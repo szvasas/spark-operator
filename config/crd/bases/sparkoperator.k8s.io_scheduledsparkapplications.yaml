@@ -1336,6 +1336,11 @@ spec:
                           EnvVars carries the environment variables to add to the pod.
                           Deprecated. Consider using `env` instead.
                         type: object
+                      failOnMonitoredSidecarZeroExitCode:
+                        description: |-
+                          FailOnMonitoredSidecarZeroExitCode specifies whether the driver should fail even if a checked sidecar completes with a 0 exit code.
+                          This is useful for sidecars that don't populate exit code properly in case of a failure.
+                        type: boolean
                       gpu:
                         description: GPU specifies GPU requirement for the pod.
                         properties:
@@ -2973,6 +2978,12 @@ spec:
                       memoryOverhead:
                         description: MemoryOverhead is the amount of off-heap memory
                           to allocate in cluster mode, in MiB unless otherwise specified.
+                        type: string
+                      monitoredSidecars:
+                        description: |-
+                          MonitoredSidecars is a list of sidecar containers in the driver pod that should be monitored for driver health.
+                          If any of these containers fail, the driver will be considered failed.
+                          '_all' is a special value that indicates all sidecars in the driver pod should be monitored.
                         type: string
                       nodeSelector:
                         additionalProperties:

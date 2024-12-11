@@ -649,6 +649,33 @@ string
 <p>PriorityClassName is the name of the PriorityClass for the driver pod.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>monitoredSidecars</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MonitoredSidecars is a list of sidecar containers in the driver pod that should be monitored for driver health.
+If any of these containers fail, the driver will be considered failed.
+&lsquo;_all&rsquo; is a special value that indicates all sidecars in the driver pod should be monitored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>failOnMonitoredSidecarZeroExitCode</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FailOnMonitoredSidecarZeroExitCode specifies whether the driver should fail even if a checked sidecar completes with a 0 exit code.
+This is useful for sidecars that don&rsquo;t populate exit code properly in case of a failure.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="sparkoperator.k8s.io/v1beta2.DriverState">DriverState
