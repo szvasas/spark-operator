@@ -550,6 +550,134 @@ var _ = Describe("SparkApplication Controller", func() {
 			Expect(app.Status.ExecutorState).To(HaveLen(1))
 		})
 	})
+
+	Context("When reconciling a SparkApplication with a driver pod containing a sidecar", func() {
+		ctx := context.Background()
+		appName := "test"
+		appNamespace := "default"
+		sidecarName := "my-sidecar"
+		exitCode := int32(137)
+		reason := "OOMKilled"
+		key := types.NamespacedName{
+			Name:      appName,
+			Namespace: appNamespace,
+		}
+
+		BeforeEach(func() {
+			By("Creating a test SparkApplication")
+			app := &v1beta2.SparkApplication{}
+			if err := k8sClient.Get(ctx, key, app); err != nil && errors.IsNotFound(err) {
+				app = &v1beta2.SparkApplication{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      appName,
+						Namespace: appNamespace,
+					},
+					Spec: v1beta2.SparkApplicationSpec{
+						MainApplicationFile: util.StringPtr("local:///dummy.jar"),
+					},
+				}
+				v1beta2.SetSparkApplicationDefaults(app)
+				app.Spec.Driver.MonitoredSidecars = &sidecarName
+				Expect(k8sClient.Create(ctx, app)).To(Succeed())
+				app.Status.AppState.State = v1beta2.ApplicationStateSubmitted
+				driverPod := createDriverPodWithSidecar(appName, appNamespace, sidecarName)
+				Expect(k8sClient.Create(ctx, driverPod)).To(Succeed())
+				app.Status.DriverInfo.PodName = driverPod.Name
+				Expect(k8sClient.Status().Update(ctx, app)).To(Succeed())
+			}
+		})
+
+		AfterEach(func() {
+			app := &v1beta2.SparkApplication{}
+			Expect(k8sClient.Get(ctx, key, app)).To(Succeed())
+
+			By("Deleting the created test SparkApplication")
+			Expect(k8sClient.Delete(ctx, app)).To(Succeed())
+
+			By("Deleting the driver pod")
+			driverPod := &corev1.Pod{}
+			Expect(k8sClient.Get(ctx, getDriverNamespacedName(appName, appNamespace), driverPod)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, driverPod)).To(Succeed())
+		})
+
+		It("When reconciling a running SparkApplication with a failed driver container", func() {
+			By("Reconciling the created test SparkApplication")
+			reconciler := sparkapplication.NewReconciler(
+				nil,
+				k8sClient.Scheme(),
+				k8sClient,
+				record.NewFakeRecorder(3),
+				nil,
+				sparkapplication.Options{Namespaces: []string{appNamespace}, DriverPodCreationGracePeriod: 0 * time.Second},
+			)
+
+			driverPod := &corev1.Pod{}
+			Expect(k8sClient.Get(ctx, getDriverNamespacedName(appName, appNamespace), driverPod)).To(Succeed())
+			driverPod.Status = corev1.PodStatus{
+				Phase: corev1.PodRunning,
+				ContainerStatuses: []corev1.ContainerStatus{
+					{
+						Name: common.SparkDriverContainerName,
+						State: corev1.ContainerState{
+							Terminated: &corev1.ContainerStateTerminated{
+								ExitCode: exitCode,
+								Reason:   reason,
+							},
+						},
+					},
+				},
+			}
+			Expect(k8sClient.Status().Update(ctx, driverPod)).To(Succeed())
+
+			result, err := reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: key})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Requeue).To(BeFalse())
+
+			app := &v1beta2.SparkApplication{}
+			Expect(k8sClient.Get(ctx, key, app)).To(Succeed())
+			Expect(app.Status.AppState.State).To(Equal(v1beta2.ApplicationStateFailing))
+			Expect(app.Status.AppState.ErrorMessage).To(Equal(fmt.Sprintf("driver container failed with ExitCode: %d, Reason: %s", exitCode, reason)))
+		})
+
+		It("When reconciling a running SparkApplication with a failed sidecar container", func() {
+			By("Reconciling the created test SparkApplication")
+			reconciler := sparkapplication.NewReconciler(
+				nil,
+				k8sClient.Scheme(),
+				k8sClient,
+				record.NewFakeRecorder(3),
+				nil,
+				sparkapplication.Options{Namespaces: []string{appNamespace}, DriverPodCreationGracePeriod: 0 * time.Second},
+			)
+
+			driverPod := &corev1.Pod{}
+			Expect(k8sClient.Get(ctx, getDriverNamespacedName(appName, appNamespace), driverPod)).To(Succeed())
+			driverPod.Status = corev1.PodStatus{
+				Phase: corev1.PodRunning,
+				ContainerStatuses: []corev1.ContainerStatus{
+					{
+						Name: sidecarName,
+						State: corev1.ContainerState{
+							Terminated: &corev1.ContainerStateTerminated{
+								ExitCode: exitCode,
+								Reason:   reason,
+							},
+						},
+					},
+				},
+			}
+			Expect(k8sClient.Status().Update(ctx, driverPod)).To(Succeed())
+
+			result, err := reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: key})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Requeue).To(BeFalse())
+
+			app := &v1beta2.SparkApplication{}
+			Expect(k8sClient.Get(ctx, key, app)).To(Succeed())
+			Expect(app.Status.AppState.State).To(Equal(v1beta2.ApplicationStateFailing))
+			Expect(app.Status.AppState.ErrorMessage).To(ContainSubstring(fmt.Sprintf("monitored sidecar %s completed with ExitCode: %d, Reason: %s", sidecarName, exitCode, reason)))
+		})
+	})
 })
 
 func getDriverNamespacedName(appName string, appNamespace string) types.NamespacedName {
@@ -580,6 +708,15 @@ func createDriverPod(appName string, appNamespace string) *corev1.Pod {
 			},
 		},
 	}
+	return pod
+}
+
+func createDriverPodWithSidecar(appName string, appNamespace string, sidecarName string) *corev1.Pod {
+	pod := createDriverPod(appName, appNamespace)
+	pod.Spec.Containers = append(pod.Spec.Containers, corev1.Container{
+		Name:  sidecarName,
+		Image: "sidecar:latest",
+	})
 	return pod
 }
 
